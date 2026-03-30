@@ -27,13 +27,16 @@ jobs:
   sync:
     name: Sync awesome-copilot assets
     runs-on: ubuntu-latest
+    # 新增：强制使用 Node.js 24 运行 JavaScript Action
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       DEFAULT_SOURCE_REF: main
       SOURCE_REPO: https://github.com/github/awesome-copilot.git
       SYNC_BRANCH: automation/sync-copilot-configs
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        # 可选：升级到 checkout 最新版（如 v4.2.1），增强兼容性
+        uses: actions/checkout@v4.2.1
         with:
           fetch-depth: 0
 
