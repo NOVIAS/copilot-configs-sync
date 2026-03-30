@@ -1,0 +1,34 @@
+{
+  "name": "copilot-configs-sync",
+  "version": "1.0.0",
+  "description": "Automated GitHub Actions workflow to sync GitHub Copilot configuration files from awesome-copilot repository",
+  "type": "module",
+  "keywords": [
+    "github-copilot",
+    "github-actions",
+    "automation",
+    "sync",
+    "workflow",
+    "copilot-config",
+    "awesome-copilot"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/copilot-configs-sync.git"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/copilot-configs-sync#readme",
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/copilot-configs-sync/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "validate:workflow": "npx --yes js-yaml .github/workflows/sync-copilot-configs.yml > /dev/null && echo 'Workflow YAML is valid'",
+    "help": "echo '📖 For documentation, see: README.md, docs/setup.md, docs/configuration.md, docs/troubleshooting.md'"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}

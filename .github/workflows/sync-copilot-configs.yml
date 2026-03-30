@@ -1,0 +1,218 @@
+name: Sync Copilot Configs
+
+on:
+  schedule:
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: 'awesome-copilot source ref (branch, tag, or commit SHA)'
+        required: false
+        default: 'main'
+      create_weekly_branch:
+        description: 'Force create weekly branch for current sync result'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-copilot-configs
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync awesome-copilot assets
+    runs-on: ubuntu-latest
+    env:
+      DEFAULT_SOURCE_REF: main
+      SOURCE_REPO: https://github.com/github/awesome-copilot.git
+      SYNC_BRANCH: automation/sync-copilot-configs
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve source ref and schedule flags
+        id: context
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.source_ref }}" ]]; then
+            source_ref="${{ inputs.source_ref }}"
+          else
+            source_ref="$DEFAULT_SOURCE_REF"
+          fi
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.create_weekly_branch }}" == "true" ]]; then
+            force_weekly_branch=true
+          else
+            force_weekly_branch=false
+          fi
+
+          is_monday=false
+          if [[ "$(TZ=Asia/Shanghai date +%u)" == "1" ]]; then
+            is_monday=true
+          fi
+
+          echo "source_ref=$source_ref" >> "$GITHUB_OUTPUT"
+          echo "force_weekly_branch=$force_weekly_branch" >> "$GITHUB_OUTPUT"
+          echo "is_monday=$is_monday" >> "$GITHUB_OUTPUT"
+
+      - name: Clone source repository with sparse checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone \
+            --depth=1 \
+            --branch "${{ steps.context.outputs.source_ref }}" \
+            --filter=blob:none \
+            --sparse \
+            "$SOURCE_REPO" __awesome_copilot__
+
+          cd __awesome_copilot__
+          git sparse-checkout set chatmodes instructions prompts agents
+
+      - name: Synchronize directories
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p .github/chatmodes .github/instructions .github/prompts .github/agents
+
+          rsync -a --delete __awesome_copilot__/chatmodes/ .github/chatmodes/
+          rsync -a --delete __awesome_copilot__/instructions/ .github/instructions/
+          rsync -a --delete __awesome_copilot__/prompts/ .github/prompts/
+          rsync -a --delete __awesome_copilot__/agents/ .github/agents/
+
+      - name: Update sync readme
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          synced_at="$(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          cat <<EOF > SYNC_README.md
+          # 自动同步说明
+
+          此仓库中的 Copilot 配置文件通过 GitHub Actions 自动从 [Awesome GitHub Copilot Customizations](https://github.com/github/awesome-copilot) 同步。
+
+          ## 同步内容
+
+          - **.github/chatmodes/**: GitHub Copilot 聊天模式文件
+          - **.github/instructions/**: GitHub Copilot 指令文件
+          - **.github/prompts/**: GitHub Copilot 提示文件
+          - **.github/agents/**: GitHub Copilot 代理文件
+
+          ## 同步时间
+
+          - 每天北京时间 00:00 自动执行同步
+          - 每周一北京时间 00:00 的同步结果可自动创建周归档分支
+
+          ## 手动触发
+
+          如需立即同步，可在 GitHub Actions 页面手动运行 **Sync Copilot Configs** workflow。
+
+          ## 注意事项
+
+          请勿直接修改上述同步目录中的文件，否则会在下一次同步时被覆盖。如需定制，请在其他目录维护自己的文件。
+
+          ## 来源项目
+
+          - 来源仓库: https://github.com/github/awesome-copilot
+          - 来源版本: ${{ steps.context.outputs.source_ref }}
+
+          最后同步时间: $synced_at
+          EOF
+
+      - name: Commit synced changes to default branch
+        id: commit_sync
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf __awesome_copilot__
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$SYNC_BRANCH"
+
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git add .github/chatmodes .github/instructions .github/prompts .github/agents SYNC_README.md
+          git commit -m "chore: sync awesome-copilot configs"
+          git push --force-with-lease origin "$SYNC_BRANCH"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update pull request
+        if: steps.commit_sync.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cat <<EOF > pr-body.md
+          This pull request was created automatically by GitHub Actions.
+
+          Summary:
+          - Sync chatmodes, instructions, prompts, and agents from github/awesome-copilot
+          - Update SYNC_README.md with source and sync metadata
+
+          Source ref: ${{ steps.context.outputs.source_ref }}
+          EOF
+
+          existing_pr="$(gh pr list \
+            --head "$SYNC_BRANCH" \
+            --base "${{ github.event.repository.default_branch }}" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')"
+
+          if [[ -n "$existing_pr" ]]; then
+            gh pr edit "$existing_pr" \
+              --title "chore: sync awesome-copilot configs" \
+              --body-file pr-body.md
+          else
+            gh pr create \
+              --base "${{ github.event.repository.default_branch }}" \
+              --head "$SYNC_BRANCH" \
+              --title "chore: sync awesome-copilot configs" \
+              --body-file pr-body.md
+          fi
+
+      - name: Create or refresh weekly branch
+        if: steps.context.outputs.is_monday == 'true' || steps.context.outputs.force_weekly_branch == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          current_day="$(TZ=Asia/Shanghai date +%d)"
+          current_year_month="$(TZ=Asia/Shanghai date +%Y%m)"
+          first_day_of_month="$(TZ=Asia/Shanghai date +%Y-%m-01)"
+          first_weekday="$(TZ=Asia/Shanghai date -d "$first_day_of_month" +%u)"
+          first_monday_day=$(( ((8 - first_weekday) % 7) + 1 ))
+
+          if (( 10#$current_day < first_monday_day )); then
+            week_index=1
+          else
+            week_index=$(( ((10#$current_day - first_monday_day) / 7) + 1 ))
+          fi
+
+          branch_name="${current_year_month}-第${week_index}周"
+
+          git fetch origin
+
+          if git ls-remote --exit-code --heads origin "$SYNC_BRANCH" >/dev/null 2>&1; then
+            git checkout -B "$branch_name" "origin/$SYNC_BRANCH"
+          else
+            git checkout -B "$branch_name"
+          fi
+
+          git push --force-with-lease origin "$branch_name"

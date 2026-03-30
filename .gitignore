@@ -1,0 +1,33 @@
+# Temporary and cache files
+node_modules/
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode/settings.json
+
+# Build outputs
+dist/
+build/
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Git worktree directories (used during workflow runs)
+__awesome_copilot__/
+pr-body.md
+
+# IDE specific files
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS specific
+Thumbs.db
+.directory
+
+# Temporary workflow files
+.github/workflows/temp-*
