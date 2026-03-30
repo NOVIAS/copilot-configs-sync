@@ -55,7 +55,7 @@ copilot-configs-sync/
 该 workflow 已预配置默认值，无需额外配置即可使用：
 
 - **同步触发时间**：每天北京时间 00:00（UTC 16:00）
-- **同步源**：https://github.com/github/awesome-copilot（main 分支）
+- **同步源**：https://github.com/github/awesome-copilot （main 分支）
 - **同步分支**：`automation/sync-copilot-configs`
 
 ### 3. 推送到 GitHub
