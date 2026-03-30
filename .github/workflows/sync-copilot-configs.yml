@@ -35,10 +35,12 @@ jobs:
       SYNC_BRANCH: automation/sync-copilot-configs
     steps:
       - name: Checkout repository
-        # 可选：升级到 checkout 最新版（如 v4.2.1），增强兼容性
-        uses: actions/checkout@v4.2.1
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Use a PAT if you want workflows to trigger on the created PR
+          # token: ${{ secrets.PAT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Resolve source ref and schedule flags
         id: context
@@ -158,6 +160,15 @@ jobs:
       - name: Create or update pull request
         if: steps.commit_sync.outputs.changed == 'true'
         env:
+          # To fix "GitHub Actions is not permitted to create or approve pull requests" error:
+          # Option 1 (Recommended): Enable in repository settings:
+          #   Settings → Actions → General → Workflow permissions →
+          #   Check "Allow GitHub Actions to create and approve pull requests"
+          # Option 2: Use a Personal Access Token (PAT) with 'repo' scope:
+          #   Create a PAT at https://github.com/settings/tokens
+          #   Add it as a secret named PAT_TOKEN in repository settings
+          #   Then uncomment the line below and comment out the GITHUB_TOKEN line
+          # GH_TOKEN: ${{ secrets.PAT_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
