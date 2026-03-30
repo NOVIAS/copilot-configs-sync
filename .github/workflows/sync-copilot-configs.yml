@@ -63,7 +63,7 @@ jobs:
             "$SOURCE_REPO" __awesome_copilot__
 
           cd __awesome_copilot__
-          git sparse-checkout set instructions agents .gitignore
+          git sparse-checkout set instructions agents
 
       - name: Synchronize directories
         shell: bash
