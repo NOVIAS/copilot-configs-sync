@@ -76,19 +76,23 @@ jobs:
             "$SOURCE_REPO" __awesome_copilot__
 
           cd __awesome_copilot__
-          git sparse-checkout set chatmodes instructions prompts agents
+          git sparse-checkout set instructions agents
 
       - name: Synchronize directories
         shell: bash
         run: |
           set -euo pipefail
 
-          mkdir -p .github/chatmodes .github/instructions .github/prompts .github/agents
+          mkdir -p .github/instructions .github/agents
 
-          rsync -a --delete __awesome_copilot__/chatmodes/ .github/chatmodes/
-          rsync -a --delete __awesome_copilot__/instructions/ .github/instructions/
-          rsync -a --delete __awesome_copilot__/prompts/ .github/prompts/
-          rsync -a --delete __awesome_copilot__/agents/ .github/agents/
+          # Sync only directories that exist in the source repository
+          if [ -d "__awesome_copilot__/instructions" ]; then
+            rsync -a --delete __awesome_copilot__/instructions/ .github/instructions/
+          fi
+
+          if [ -d "__awesome_copilot__/agents" ]; then
+            rsync -a --delete __awesome_copilot__/agents/ .github/agents/
+          fi
 
       - name: Update sync readme
         shell: bash
@@ -103,9 +107,7 @@ jobs:
 
           ## 同步内容
 
-          - **.github/chatmodes/**: GitHub Copilot 聊天模式文件
           - **.github/instructions/**: GitHub Copilot 指令文件
-          - **.github/prompts/**: GitHub Copilot 提示文件
           - **.github/agents/**: GitHub Copilot 代理文件
 
           ## 同步时间
@@ -145,7 +147,7 @@ jobs:
             exit 0
           fi
 
-          git add .github/chatmodes .github/instructions .github/prompts .github/agents SYNC_README.md
+          git add .github/instructions .github/agents SYNC_README.md
           git commit -m "chore: sync awesome-copilot configs"
           git push --force-with-lease origin "$SYNC_BRANCH"
           echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -162,7 +164,7 @@ jobs:
           This pull request was created automatically by GitHub Actions.
 
           Summary:
-          - Sync chatmodes, instructions, prompts, and agents from github/awesome-copilot
+          - Sync instructions and agents from github/awesome-copilot
           - Update SYNC_README.md with source and sync metadata
 
           Source ref: ${{ steps.context.outputs.source_ref }}
