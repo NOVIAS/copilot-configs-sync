@@ -6,9 +6,7 @@
 
 该项目提供了一个完整的 GitHub Actions 工作流来自动同步 [Awesome GitHub Copilot Customizations](https://github.com/github/awesome-copilot) 仓库中的 Copilot 自定义配置文件，包括：
 
-- **聊天模式 (chatmodes)** - GitHub Copilot 聊天模式配置
 - **指令文件 (instructions)** - Copilot 自定义指令
-- **提示文件 (prompts)** - 可复用的提示模板
 - **代理文件 (agents)** - 自定义代理配置
 
 ## 核心功能
@@ -83,10 +81,8 @@ git push origin main  # 或你的默认分支
     ↓
 [3] 克隆 awesome-copilot（稀疏检出）
     ↓
-[4] 同步 4 个目录到 .github/
-    ├── .github/chatmodes/
+[4] 同步 2 个目录到 .github/
     ├── .github/instructions/
-    ├── .github/prompts/
     └── .github/agents/
     ↓
 [5] 更新 SYNC_README.md & 生成提交
