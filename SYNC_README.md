@@ -4,15 +4,13 @@
 
 ## 同步内容
 
-- **.github/chatmodes/**: GitHub Copilot 聊天模式文件
 - **.github/instructions/**: GitHub Copilot 指令文件
-- **.github/prompts/**: GitHub Copilot 提示文件
 - **.github/agents/**: GitHub Copilot 代理文件
+- **.gitignore**: Git 忽略规则文件
 
 ## 同步时间
 
 - 每天北京时间 00:00 自动执行同步（UTC 16:00）
-- 每周一北京时间 00:00 的同步结果可自动创建周归档分支
 
 ## 手动触发
 
@@ -23,15 +21,14 @@
 | 参数 | 示例值 | 说明 |
 |------|--------|------|
 | `source_ref` | `main` 或 `v1.0.0` | 同步源的分支/tag |
-| `create_weekly_branch` | `true` | 强制创建当前周的归档分支 |
 
 ## 同步流程
 
 1. 克隆 awesome-copilot 源仓库（只下载需要的目录）
-2. 同步 chatmodes、instructions、prompts、agents 到 `.github/` 下
+2. 同步 instructions、agents 到 `.github/` 下，同步 `.gitignore` 到项目根目录
 3. 更新并提交到同步分支 `automation/sync-copilot-configs`
 4. 自动创建或更新 PR 到默认分支
-5. 每周一时，从同步分支创建周归档分支（如启用）
+5. PR 启用 auto-merge，待所有 status checks 通过后自动合并
 
 ## 注意事项
 
@@ -40,10 +37,9 @@
 以下目录的内容会在同步时被覆盖：
 
 ```
-.github/chatmodes/
 .github/instructions/
-.github/prompts/
 .github/agents/
+.gitignore
 ```
 
 ### 如何定制 Copilot 配置
@@ -57,9 +53,7 @@
 
 ```
 .github/
-├── chatmodes/              ← 自动同步（勿改）
 ├── instructions/           ← 自动同步（勿改）
-├── prompts/                ← 自动同步（勿改）
 ├── agents/                 ← 自动同步（勿改）
 ├── copilot-instructions.md ← 你的自定义内容
 ├── my-instructions/        ← 你的自定义目录
@@ -74,22 +68,14 @@
 所有同步的文件来源于：
 
 - **源仓库**: [github/awesome-copilot](https://github.com/github/awesome-copilot)
-- **同步内容**: 官方提供的教程、指令、代理和提示
+- **同步内容**: 官方提供的指令、代理和 Git 忽略规则
 - **更新频率**: 通过此项目每日自动同步
 
-## 周归档分支说明
+## 自动合并说明
 
-每周一自动创建周归档分支，命名规则为 `YYYYMM-第N周`：
+PR 创建后会自动启用 auto-merge。当所有 status checks 通过后，PR 会被自动合并到主分支并删除同步分支。
 
-- `202603-第1周` - 2026年3月第1个周一的同步内容快照
-- `202603-第2周` - 2026年3月第2个周一的同步内容快照
-- ...以此类推
-
-周分支包含该周最新同步的完整内容，可用于：
-
-- 📌 保存周度快照
-- 🔍 追踪内容变化历史
-- 🔄 快速回滚到某个周的配置
+> **注意**：请确保仓库分支保护规则允许 auto-merge。如果没有配置任何 status checks，PR 会立即合并。
 
 ## 工作流状态检查
 
@@ -116,24 +102,17 @@
 .github/
 ├── workflows/
 │   └── sync-copilot-configs.yml
-├── chatmodes/
-│   ├── backend.chatmode.md
-│   ├── frontend.chatmode.md
-│   └── ...
 ├── instructions/
 │   ├── typescript.instructions.md
 │   ├── python.instructions.md
-│   └── ...
-├── prompts/
-│   ├── test-gen.prompt.md
-│   ├── doc-gen.prompt.md
 │   └── ...
 └── agents/
     ├── code-reviewer.agent.md
     ├── architect.agent.md
     └── ...
 
-SYNC_README.md  ← 每次同步自动更新时间戳
+.gitignore          ← 同步自 awesome-copilot
+SYNC_README.md      ← 每次同步自动更新时间戳
 ```
 
 ## 其他帮助

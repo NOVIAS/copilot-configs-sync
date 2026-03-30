@@ -8,6 +8,7 @@
 
 - **指令文件 (instructions)** - Copilot 自定义指令
 - **代理文件 (agents)** - 自定义代理配置
+- **Git 忽略文件 (.gitignore)** - Git 忽略规则
 
 ## 核心功能
 
@@ -21,10 +22,13 @@
 - ✅ 自动创建或更新 PR，而不是直接推默认分支
 - ✅ 支持默认分支受保护的仓库
 
-### 3. 周归档分支
-- ✅ 每周一北京时间 00:00 自动创建周分支
-- ✅ 分支命名规则：`YYYYMM-第N周`（如 `202603-第5周`）
-- ✅ 安全的分支刷新机制（force-with-lease）
+### 3. 自动合并
+- ✅ PR 创建后自动启用 auto-merge
+- ✅ 所有 status checks 通过后自动合并到主分支
+- ✅ 合并后自动删除同步分支
+
+### 4. .gitignore 同步
+- ✅ 同步 github/awesome-copilot 的 `.gitignore` 到项目根目录
 
 ## 项目结构
 
@@ -77,13 +81,14 @@ git push origin main  # 或你的默认分支
     ↓
 [1] Checkout 仓库（完整历史）
     ↓
-[2] 检测执行事件（定时/手动）& 北京时间判断
+[2] 检测执行事件（定时/手动）
     ↓
 [3] 克隆 awesome-copilot（稀疏检出）
     ↓
-[4] 同步 2 个目录到 .github/
+[4] 同步 3 个目录/文件到项目
     ├── .github/instructions/
-    └── .github/agents/
+    ├── .github/agents/
+    └── .gitignore
     ↓
 [5] 更新 SYNC_README.md & 生成提交
     ↓
@@ -91,7 +96,7 @@ git push origin main  # 或你的默认分支
     ↓
 [7] 创建 PR（如有内容变化）
     ↓
-[8] 周一时创建周归档分支（如已启用）
+[8] 启用 auto-merge（checks 通过后自动合并）
 ```
 
 ## 手动触发
@@ -101,7 +106,6 @@ git push origin main  # 或你的默认分支
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `source_ref` | String | `main` | awesome-copilot 源分支/tag/commit SHA |
-| `create_weekly_branch` | Boolean | `false` | 强制创建本周归档分支 |
 
 ## 权限配置
 

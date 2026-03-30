@@ -68,7 +68,7 @@ git push origin main
 | **运行时间** | 每天北京时间 00:00 | 编辑 cron 表达式 |
 | **同步源** | github/awesome-copilot main | 修改 DEFAULT_SOURCE_REF |
 | **同步分支** | automation/sync-copilot-configs | 修改 SYNC_BRANCH |
-| **周分支** | 自动创建（如 202603-第1周） | 可禁用最后一个 step |
+| **自动合并** | 开启（checks 通过后自动合并） | 可删除 auto-merge 步骤 |
 
 ## 🎯 常用操作速查
 
@@ -94,14 +94,17 @@ gh run view --latest -R YOUR_USERNAME/YOUR_REPO
 ### 查看同步的文件
 
 ```bash
-# 列出同步的聊天模式
-ls .github/chatmodes/
-
 # 列出同步的指令
 ls .github/instructions/
 
+# 列出同步的代理
+ls .github/agents/
+
+# 查看 .gitignore
+cat .gitignore
+
 # 统计文件数
-find .github/{chatmodes,instructions,prompts,agents} -type f | wc -l
+find .github/{instructions,agents} -type f | wc -l
 ```
 
 ## 🔑 核心概念解释
@@ -111,15 +114,11 @@ find .github/{chatmodes,instructions,prompts,agents} -type f | wc -l
 - 自动创建 PR 到默认分支
 - **用户无需手动操作此分支**
 
-### 周分支 (如 202603-第1周)
-- 每周一自动创建，包含该周同步的完整快照
-- 用于归档和追踪历史变化
-- 可选功能，可在 workflow 中禁用
-
-### PR 工作流
-- 同步后自动创建 PR 而不是直接推分支
-- 适合受保护的默认分支
-- 团队可在合并前审核变化
+### 自动合并
+- PR 创建后自动启用 auto-merge
+- 当所有 status checks 通过时自动合并到默认分支
+- 合并后同步分支自动删除
+- 适合默认分支受保护的仓库
 
 ## ⚡ 工作流程示意
 
@@ -134,11 +133,9 @@ find .github/{chatmodes,instructions,prompts,agents} -type f | wc -l
     ↓
 [PR] 自动创建或更新 Pull Request
     ↓
-[你] 查看改动，决定是否合并
+[自动] 启用 auto-merge
     ↓
-[合并] PR 到默认分支
-    ↓
-[周一] 自动创建周归档分支 YYYYMM-第N周
+[checks 通过] 自动合并到主分支
 ```
 
 ## ❓ 快速 Q&A
@@ -152,8 +149,6 @@ A: workflow 使用 rsync --delete，一般不会有冲突。若遇到，参考 t
 **Q: 可以禁用自动运行吗？**  
 A: 可以，移除 cron 触发器，仅保留 workflow_dispatch（手动触发）。
 
-**Q: 周分支命名为什么这样？**  
-A: YYYYMM-第N周 中的 N 是"本月第几个周一"，便于档案管理。
 
 **Q: 怎样防止自定义文件被覆盖？**  
 A: 不要在同步目录存放自定义文件。建议使用 `.github/my-instructions/`。

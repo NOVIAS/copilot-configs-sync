@@ -131,13 +131,13 @@ env:
   SYNC_BRANCH: chore/sync-copilot  # 改为自己的分支名
 ```
 
-### 禁用周分支创建
+### 禁用自动合并
 
-如果不需要周分支功能，删除或注释最后一个 step：
+如果不需要 auto-merge 功能，删除或注释最后一个 step：
 
 ```yaml
-# - name: Create or refresh weekly branch
-#   if: steps.context.outputs.is_monday == 'true' || steps.context.outputs.force_weekly_branch == 'true'
+# - name: Enable auto-merge on pull request
+#   if: steps.commit_sync.outputs.changed == 'true'
 #   ...
 ```
 
@@ -239,7 +239,6 @@ set -x  # 打印每条命令
 
 ```bash
 echo "source_ref=$source_ref"
-echo "is_monday=$is_monday"
 echo "branch_name=$branch_name"
 ```
 

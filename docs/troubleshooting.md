@@ -20,7 +20,7 @@
 | Checkout repository | [权限问题](#权限问题) |
 | Clone source repository | [网络连接](#网络连接问题) |
 | Create or update pull request | [PR 相关问题](#pr-相关问题) |
-| Create or refresh weekly branch | [周分支问题](#周分支问题) |
+| Enable auto-merge on pull request | [自动合并问题](#自动合并问题) |
 
 ---
 
@@ -118,10 +118,9 @@ fatal: unable to access 'https://github.com/github/awesome-copilot.git/': Could 
 手动访问 https://github.com/github/awesome-copilot 确认文件仍然存在：
 
 ```
-/chatmodes/
 /instructions/
-/prompts/
 /agents/
+.gitignore
 ```
 
 **2. 查看 rsync 日志**
@@ -134,7 +133,7 @@ fatal: unable to access 'https://github.com/github/awesome-copilot.git/': Could 
 
 ```bash
 # 在日志中查找此行
-git sparse-checkout set chatmodes instructions prompts agents
+git sparse-checkout set instructions agents .gitignore
 ```
 
 ---
@@ -176,63 +175,31 @@ Workflow 成功但没有看到 PR
 
 ---
 
-### ✗ 周分支问题
+### ✗ 自动合并问题
 
-#### 错误: 周分支未创建
+#### 错误: auto-merge 未生效
 
 ```
-周一运行但没有看到周分支
+PR 创建后没有自动合并
 ```
 
 #### 原因
 
-1. 时区判断错误
-2. 周分支推送失败
-3. 手动运行时不符合条件
-
-#### 诊断步骤
-
-**1. 检查时区判断**
-
-在日志中查找：
-
-```bash
-if [[ "$(TZ=Asia/Shanghai date +%u)" == "1" ]]; then
-  is_monday=true
-```
-
-确认输出为 `is_monday=true`（仅在周一）。
-
-**2. 验证分支推送**
-
-查看是否有推送分支的日志：
-
-```bash
-git push --force-with-lease origin "$branch_name"
-```
-
-**3. 检查现有周分支**
-
-在 GitHub 界面的 Branches 标签查看是否存在周分支。
+1. 仓库未启用 auto-merge 功能
+2. 分支保护规则要求必须有 review 才能合并
+3. 合并方式不支持（需要允许 squash merge）
 
 #### 解决方案
 
-**手动创建周分支**:
+**1. 启用仓库 auto-merge 功能**
 
-1. 手动运行 workflow
-2. 勾选 `create_weekly_branch` = `true`
-3. 运行应该会创建周分支
+1. 进入仓库 **Settings > General**
+2. 向下找到 **Pull Requests** 部分
+3. 勾选 **Allow auto-merge**
 
-**强制推送周分支**:
+**2. 排查分支保护规则**
 
-```bash
-# 本地测试周分支创建逻辑
-TZ=Asia/Shanghai date +%u  # 输出 1 表示周一
-
-current_day=$(TZ=Asia/Shanghai date +%d)
-current_year_month=$(TZ=Asia/Shanghai date +%Y%m)
-echo "${current_year_month}-第$(( ((10#$current_day - 1) / 7) + 1 ))周"
-```
+确认主分支的保护规则中没有要求 review 批准，或将 GitHub Actions 添加到 bypass 列表。
 
 ---
 
@@ -296,9 +263,7 @@ git push
 
 ```
 .github/
-├── chatmodes/           ← 同步目录
 ├── instructions/        ← 同步目录
-├── prompts/             ← 同步目录
 ├── agents/              ← 同步目录
 ├── my-instructions/     ← 你的自定义
 └── custom-skills/       ← 你的自定义
@@ -349,11 +314,12 @@ git clone --depth=1 --branch main --filter=blob:none --sparse \
   https://github.com/github/awesome-copilot.git test-repo
 
 cd test-repo
-git sparse-checkout set chatmodes instructions prompts agents
+git sparse-checkout set instructions agents .gitignore
 
 # 检查新同步的文件
-ls -la chatmodes/
 ls -la instructions/
+ls -la agents/
+cat .gitignore
 ```
 
 ### 查看完整日志
