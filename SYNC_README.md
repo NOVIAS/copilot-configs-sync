@@ -26,7 +26,7 @@
 
 1. 克隆 awesome-copilot 源仓库（只下载需要的目录）
 2. 同步 instructions、agents 到 `.github/` 下，同步 `.gitignore` 到项目根目录
-3. 更新并提交到同步分支 `automation/sync-copilot-configs`
+3. 更新并提交到同步分支（当前仅支持 `automation/sync-copilot-configs`）
 4. 自动创建或更新 PR 到默认分支
 5. PR 启用 auto-merge，待所有 status checks 通过后自动合并
 

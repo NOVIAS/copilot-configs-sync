@@ -67,7 +67,7 @@ git push origin main
 |--------|--------|------|
 | **运行时间** | 每天北京时间 00:00 | 编辑 cron 表达式 |
 | **同步源** | github/awesome-copilot main | 修改 DEFAULT_SOURCE_REF |
-| **同步分支** | automation/sync-copilot-configs | 修改 SYNC_BRANCH |
+| **同步分支** | automation/sync-copilot-configs | 当前仅支持该分支，不再创建周分支 |
 | **自动合并** | 开启（checks 通过后自动合并） | 可删除 auto-merge 步骤 |
 
 ## 🎯 常用操作速查
@@ -109,7 +109,9 @@ find .github/{instructions,agents} -type f | wc -l
 
 ## 🔑 核心概念解释
 
-### 同步分支 (automation/sync-copilot-configs)
+### 同步分支
+
+当前同步分支仅为 `automation/sync-copilot-configs`，不再创建任何“周分支”。
 - workflow 的工作分支，存储接收同步的改动
 - 自动创建 PR 到默认分支
 - **用户无需手动操作此分支**

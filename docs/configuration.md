@@ -46,7 +46,7 @@ on:
 env:
   DEFAULT_SOURCE_REF: main              # 默认同步分支
   SOURCE_REPO: https://github.com/github/awesome-copilot.git  # 源仓库
-  SYNC_BRANCH: automation/sync-copilot-configs   # 本地同步分支名
+  SYNC_BRANCH: automation/sync-copilot-configs   # 当前仅支持该分支，不再创建周分支
 ```
 
 #### 使用特定版本
@@ -121,7 +121,7 @@ on:
 
 ### 修改同步分支名
 
-如需更改同步分支名（默认为 `automation/sync-copilot-configs`）：
+如需更改同步分支名（默认为 `automation/sync-copilot-configs`，不再支持周分支）：
 
 1. 编辑 workflow 中的 `SYNC_BRANCH` 变量
 2. 更新 PR 相关步骤中的分支引用
@@ -149,7 +149,7 @@ env:
 |------|--------|------|--------|
 | `DEFAULT_SOURCE_REF` | `main` | 同步源分支 | ✅ |
 | `SOURCE_REPO` | `https://github.com/github/awesome-copilot.git` | 源仓库 | ✅ |
-| `SYNC_BRANCH` | `automation/sync-copilot-configs` | 同步分支 | ✅ |
+| `SYNC_BRANCH` | `automation/sync-copilot-configs` | 同步分支（仅支持该分支） | ✅ |
 
 ## Git 设置
 

@@ -125,16 +125,10 @@ permissions:
 |------|-----|------|
 | `DEFAULT_SOURCE_REF` | `main` | 默认源分支 |
 | `SOURCE_REPO` | `https://github.com/github/awesome-copilot.git` | 源仓库 URL |
+
 | `SYNC_BRANCH` | `automation/sync-copilot-configs` | 同步分支名 |
 
-## 周分支命名规则
-
-周分支名按照"本月第几个周一"自动计算，不是周数。示例：
-
-- 2026 年 3 月 2 日（第 1 个周一）→ `202603-第1周`
-- 2026 年 3 月 9 日（第 2 个周一）→ `202603-第2周`
-- 2026 年 3 月 16 日（第 3 个周一）→ `202603-第3周`
-- 2026 年 4 月 6 日（第 1 个周一）→ `202604-第1周`
+> **注意：** 当前同步分支仅为 `automation/sync-copilot-configs`，不再创建任何“周分支”。
 
 ## 常见问题
 

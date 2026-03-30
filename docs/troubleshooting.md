@@ -154,7 +154,7 @@ Error: GraphQL error: Pull request creation failed
 
 1. 检查分支保护规则：**Settings > Branches**
 2. 确保允许 GitHub Actions 绕过保护（如启用了）
-3. 手动检查 `automation/sync-copilot-configs` 分支是否存在
+3. 手动检查同步分支（当前仅支持 `automation/sync-copilot-configs`）是否存在
 4. 查看完整日志获取更详细的 GraphQL 错误
 
 #### 错误 2: PR 未创建但无错误
@@ -222,7 +222,7 @@ This branch has conflicts that must be resolved
 ```bash
 # 本地测试
 git fetch origin
-git checkout automation/sync-copilot-configs
+git checkout automation/sync-copilot-configs  # 当前仅支持该分支，不再创建周分支
 git merge origin/main
 ```
 
