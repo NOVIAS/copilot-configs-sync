@@ -152,10 +152,6 @@ schedule:
 
 北京时间 00:00 对应 UTC 16:00（前一天）。
 
-### Q: 如何跳过某个星期的归档分支创建？
-
-**A:** 周分支的创建完全自动化，但可以在本周一手动删除分支，下周一时会重新创建。
-
 ### Q: 怎样避免 workflow 冲突？
 
 **A:** Workflow 已配置 `concurrency` 限制，不会有并发冲突。同时分支使用 `--force-with-lease` 确保安全。
@@ -172,9 +168,8 @@ schedule:
 每次运行 workflow 会生成：
 
 1. **SYNC_README.md** - 更新的同步说明文档
-2. **PR** - 同步内容变化时自动创建 PR
-3. **周分支** - 每周一自动创建或刷新
-4. **logs** - GitHub Actions 运行日志
+2. **PR** - 同步内容变化时自动创建 PR（所有 checks 通过后自动合并）
+3. **logs** - GitHub Actions 运行日志
 
 ## 调试技巧
 
@@ -185,13 +180,8 @@ schedule:
 ### 本地测试脚本逻辑
 
 ```bash
-# 测试 cron 表达式有效性
-TZ=Asia/Shanghai date +%u  # 输出 1 表示周一
-
-# 测试周计算
-current_day=$(TZ=Asia/Shanghai date +%d)
-current_year_month=$(TZ=Asia/Shanghai date +%Y%m)
-echo "当前日期信息: ${current_year_month}-${current_day}"
+# 测试 cron 表达式有效性（北京时间 00:00 等于 UTC 前一天 16:00）
+date -u  # 查看当前 UTC 时间
 ```
 
 ## 许可证
