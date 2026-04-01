@@ -131,7 +131,14 @@ jobs:
           rm -rf __awesome_copilot__
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -B "$SYNC_BRANCH"
+
+          # Check if remote branch already exists
+          if git ls-remote --exit-code --heads origin "$SYNC_BRANCH" > /dev/null 2>&1; then
+            git fetch origin "$SYNC_BRANCH"
+            git checkout "$SYNC_BRANCH"
+          else
+            git checkout -b "$SYNC_BRANCH"
+          fi
 
           if [[ -z "$(git status --porcelain)" ]]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -140,7 +147,13 @@ jobs:
 
           git add .github/instructions .github/agents .gitignore SYNC_README.md
           git commit -m "chore: sync awesome-copilot configs"
-          git push --force-with-lease origin "$SYNC_BRANCH"
+
+          # Rebase onto remote branch to avoid force-push
+          if git ls-remote --exit-code --heads origin "$SYNC_BRANCH" > /dev/null 2>&1; then
+            git rebase "origin/$SYNC_BRANCH"
+          fi
+
+          git push origin "$SYNC_BRANCH"
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Create or update pull request
