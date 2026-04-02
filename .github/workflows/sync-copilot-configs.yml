@@ -141,22 +141,15 @@ jobs:
             exit 0
           fi
 
-          # Check if remote branch already exists
-          if git ls-remote --exit-code --heads origin "$SYNC_BRANCH" > /dev/null 2>&1; then
-            git fetch origin "$SYNC_BRANCH"
-            git checkout "$SYNC_BRANCH"
-          else
-            git checkout -b "$SYNC_BRANCH"
-          fi
+          # Always create a fresh sync branch from the current main HEAD.
+          # This prevents merge conflicts when the branch already exists with
+          # a different SYNC_README.md timestamp or stale history.
+          git checkout -B "$SYNC_BRANCH"
 
           git commit -m "chore: sync awesome-copilot configs"
 
-          # Rebase onto remote branch to avoid force-push
-          if git ls-remote --exit-code --heads origin "$SYNC_BRANCH" > /dev/null 2>&1; then
-            git rebase "origin/$SYNC_BRANCH"
-          fi
-
-          git push origin "$SYNC_BRANCH"
+          # Force push: branch may already exist with diverged history
+          git push origin "$SYNC_BRANCH" --force
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Create or update pull request
@@ -230,8 +223,15 @@ jobs:
             --jq '.[0].number // empty')"
 
           if [[ -n "$pr_number" ]]; then
-            gh pr merge "$pr_number" \
-              --auto \
+            # Merge PR directly (squash + delete branch).
+            # Direct merge does not require branch protection conditions,
+            # unlike --auto which requires required status checks or reviews.
+            if gh pr merge "$pr_number" \
               --squash \
-              --delete-branch
+              --delete-branch 2>&1; then
+              echo "✓ PR #$pr_number merged successfully"
+            else
+              pr_url="$(gh pr view "$pr_number" --json url --jq '.url')"
+              echo "⚠ PR merge failed — please merge manually: $pr_url"
+            fi
           fi
