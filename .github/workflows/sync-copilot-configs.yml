@@ -132,6 +132,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          # Stage all changes before switching branches
+          git add .github/instructions .github/agents .gitignore SYNC_README.md
+
+          # Check if there are any changes
+          if [[ -z "$(git diff --cached --name-only)" ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           # Check if remote branch already exists
           if git ls-remote --exit-code --heads origin "$SYNC_BRANCH" > /dev/null 2>&1; then
             git fetch origin "$SYNC_BRANCH"
@@ -140,12 +149,6 @@ jobs:
             git checkout -b "$SYNC_BRANCH"
           fi
 
-          if [[ -z "$(git status --porcelain)" ]]; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          git add .github/instructions .github/agents .gitignore SYNC_README.md
           git commit -m "chore: sync awesome-copilot configs"
 
           # Rebase onto remote branch to avoid force-push

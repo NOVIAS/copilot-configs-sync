@@ -46,7 +46,69 @@ If you prefer not to grant PR creation permissions to all workflows, you can use
    - Comment out: `GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}`
    - Uncomment: `GH_TOKEN: ${{ secrets.PAT_TOKEN }}`
 
-## Issue 2: Node.js 20 deprecation warning
+## Issue 2: Pull request Branch does not have required protected branch rules (enablePullRequestAutoMerge)
+
+### Error Message
+```
+GraphQL: Pull request Branch does not have required protected branch rules (enablePullRequestAutoMerge)
+Error: Process completed with exit code 1
+```
+
+### Root Cause
+The repository does not have the auto-merge feature enabled. The workflow attempts to automatically merge pull requests using `gh pr merge --auto`, but the repository doesn't support this feature.
+
+### Solution
+
+Enable auto-merge in your repository settings:
+
+1. Go to your repository on GitHub
+2. Click **Settings** (top right)
+3. Click **General** (left sidebar)
+4. Scroll down to **Pull Requests** section
+5. Check the box: **"Allow auto-merge"**
+6. Select a default merge method (recommended: **Squash and merge**)
+7. Click **Save**
+
+After enabling this feature, the workflow will be able to automatically merge pull requests without errors.
+
+### Alternative Solution (Disable Auto-merge in Workflow)
+
+If you don't want to enable auto-merge, you can modify the workflow to remove the auto-merge step:
+
+In `.github/workflows/sync-copilot-configs.yml`, comment out or remove the **"Enable auto-merge on pull request"** step. The PR will still be created but won't be merged automatically.
+
+---
+
+## Issue 3: Your local changes to the following files would be overwritten by checkout
+
+### Error Message
+```
+error: Your local changes to the following files would be overwritten by checkout:
+  SYNC_README.md
+Please commit your changes or stash them before you switch branches.
+```
+
+### Root Cause
+The workflow generates `SYNC_README.md` in the "Update sync readme" step, but then tries to switch branches in the "Commit synced changes" step without properly staging the changes first. This causes a git conflict.
+
+### Solution
+
+**This has been fixed in the latest version of the workflow.** The workflow now:
+
+1. **Stages all changes first** using `git add` before switching branches
+2. **Checks for staged changes** using `git diff --cached` instead of `git status`
+3. **Avoids git conflicts** by ensuring no unstaged changes when switching branches
+
+**If you're still facing this issue:**
+
+1. Update your workflow file to the latest version
+2. Go to **Actions** tab
+3. Select **Sync Copilot Configs** workflow
+4. Click **Run workflow**
+
+---
+
+## Issue 4: Node.js 20 deprecation warning
 
 ### Warning Message
 ```
