@@ -27,7 +27,7 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       DEFAULT_SOURCE_REF: main
       SOURCE_REPO: https://github.com/github/awesome-copilot.git
-      SYNC_BRANCH: automation/sync-copilot-configs
+      SYNC_BRANCH_PREFIX: automation/sync-copilot-configs
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -49,7 +49,10 @@ jobs:
             source_ref="$DEFAULT_SOURCE_REF"
           fi
 
+          sync_branch="$SYNC_BRANCH_PREFIX-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
           echo "source_ref=$source_ref" >> "$GITHUB_OUTPUT"
+          echo "sync_branch=$sync_branch" >> "$GITHUB_OUTPUT"
 
       - name: Clone source repository with sparse checkout
         shell: bash
@@ -141,15 +144,14 @@ jobs:
             exit 0
           fi
 
-          # Always create a fresh sync branch from the current main HEAD.
-          # This prevents merge conflicts when the branch already exists with
-          # a different SYNC_README.md timestamp or stale history.
-          git checkout -B "$SYNC_BRANCH"
+          # Always create a fresh, unique sync branch from current HEAD.
+          # This avoids force-push restrictions and stale-branch conflicts.
+          sync_branch="${{ steps.context.outputs.sync_branch }}"
+          git checkout -b "$sync_branch"
 
           git commit -m "chore: sync awesome-copilot configs"
 
-          # Force push: branch may already exist with diverged history
-          git push origin "$SYNC_BRANCH" --force
+          git push origin "$sync_branch"
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Create or update pull request
@@ -180,7 +182,7 @@ jobs:
           EOF
 
           existing_pr="$(gh pr list \
-            --head "$SYNC_BRANCH" \
+            --head "${{ steps.context.outputs.sync_branch }}" \
             --base "${{ github.event.repository.default_branch }}" \
             --state open \
             --json number \
@@ -194,11 +196,11 @@ jobs:
           else
             gh pr create \
               --base "${{ github.event.repository.default_branch }}" \
-              --head "$SYNC_BRANCH" \
+              --head "${{ steps.context.outputs.sync_branch }}" \
               --title "chore: sync awesome-copilot configs" \
               --body-file pr-body.md
             pr_number="$(gh pr list \
-              --head "$SYNC_BRANCH" \
+              --head "${{ steps.context.outputs.sync_branch }}" \
               --base "${{ github.event.repository.default_branch }}" \
               --state open \
               --json number \
@@ -216,7 +218,7 @@ jobs:
           set -euo pipefail
 
           pr_number="$(gh pr list \
-            --head "$SYNC_BRANCH" \
+            --head "${{ steps.context.outputs.sync_branch }}" \
             --base "${{ github.event.repository.default_branch }}" \
             --state open \
             --json number \
@@ -230,6 +232,13 @@ jobs:
               --squash \
               --delete-branch 2>&1; then
               echo "✓ PR #$pr_number merged successfully"
+
+              # Safeguard: ensure the temporary sync branch is removed even if
+              # GitHub's automatic branch deletion did not execute.
+              sync_branch="${{ steps.context.outputs.sync_branch }}"
+              if git ls-remote --heads origin "$sync_branch" | grep -q "$sync_branch"; then
+                git push origin --delete "$sync_branch" || true
+              fi
             else
               pr_url="$(gh pr view "$pr_number" --json url --jq '.url')"
               echo "⚠ PR merge failed — please merge manually: $pr_url"
