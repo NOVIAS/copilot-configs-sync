@@ -25,8 +25,4 @@
 - 来源仓库: https://github.com/github/awesome-copilot
 - 来源版本: main
 
-<<<<<<< automation/sync-copilot-configs
-最后同步时间: 2026-04-02 02:12:55 UTC
-=======
-最后同步时间: 2026-04-02 02:11:34 UTC
->>>>>>> main
+最后同步时间: 2026-04-02 03:26:36 UTC
