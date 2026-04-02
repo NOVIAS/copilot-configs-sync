@@ -55,27 +55,77 @@ Error: Process completed with exit code 1
 ```
 
 ### Root Cause
-The repository does not have the auto-merge feature enabled. The workflow attempts to automatically merge pull requests using `gh pr merge --auto`, but the repository doesn't support this feature.
 
-### Solution
+The workflow attempts to enable auto-merge on pull requests using `gh pr merge --auto`, but:
 
-Enable auto-merge in your repository settings:
+1. **Auto-merge is not enabled** in your repository settings, OR
+2. **Branch protection rules** are conflicting with auto-merge settings
 
-1. Go to your repository on GitHub
+### Quick Diagnosis: Check Your Repository Settings
+
+#### Step 1: Verify Auto-merge is Enabled
+
+1. Go to your GitHub repository
 2. Click **Settings** (top right)
 3. Click **General** (left sidebar)
 4. Scroll down to **Pull Requests** section
-5. Check the box: **"Allow auto-merge"**
-6. Select a default merge method (recommended: **Squash and merge**)
-7. Click **Save**
+5. **Look for**: `✓ Allow auto-merge` checkbox
+   - ✅ If **checked**: Auto-merge is enabled
+   - ❌ If **unchecked**: Enable it now
 
-After enabling this feature, the workflow will be able to automatically merge pull requests without errors.
+#### Step 2: Check Branch Protection Rules (if applicable)
 
-### Alternative Solution (Disable Auto-merge in Workflow)
+1. Go to **Settings** → **Branches**
+2. Look for **Branch protection rules** 
+3. Check if there are rules for:
+   - `main` / default branch
+   - `automation/*` pattern
+   - Verify they don't conflict with auto-merge
 
-If you don't want to enable auto-merge, you can modify the workflow to remove the auto-merge step:
+#### Step 3: Verify Workflow Permissions
 
-In `.github/workflows/sync-copilot-configs.yml`, comment out or remove the **"Enable auto-merge on pull request"** step. The PR will still be created but won't be merged automatically.
+1. Go to **Settings** → **Actions** → **General**
+2. Find **Workflow permissions**
+3. **Confirm**: `✓ Allow GitHub Actions to create and approve pull requests` is checked
+
+### Solution
+
+Choose **one** of the following approaches:
+
+#### ✅ Recommended Solution: Enable Auto-merge in Repository Settings
+
+1. Go to **Settings** → **General**
+2. Find **Pull Requests** section
+3. **Check** the box: `✓ Allow auto-merge`
+4. **Select merge method**: Squash and merge (recommended)
+5. Click **Save**
+6. Run the workflow again
+
+**Status**: After this, the workflow will automatically merge PRs when the `automation/sync-copilot-configs` branch is synced.
+
+#### ✅ Alternative Solution: Workflow Now Handles Auto-merge Gracefully
+
+The workflow has been updated to:
+
+- ✅ **Attempt auto-merge** when it's available
+- ✅ **Continue gracefully** if auto-merge is not supported (doesn't fail the workflow)
+- ✅ **Display helpful messages** instructing users to enable auto-merge
+
+If auto-merge isn't available, the PR will still be created successfully, and you can merge it manually.
+
+**To see if this is working**:
+1. Run the workflow
+2. Check the logs for "✓ Auto-merge enabled successfully" or "⚠ Auto-merge not available"
+3. If auto-merge is unavailable, check the settings as described above
+
+### Why This Matters
+
+When the `automation/sync-copilot-configs` branch already exists from a previous sync attempt, subsequent runs may encounter:
+- Stale branch protection rules
+- Existing PR configurations
+- Rebase conflicts
+
+**Enabling auto-merge ensures clean, automated merges** without manual intervention.
 
 ---
 
